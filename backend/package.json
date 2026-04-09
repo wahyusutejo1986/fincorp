@@ -11,7 +11,7 @@
   "dependencies": {
     "express": "4.18.2",
     "jsonwebtoken": "8.5.1",
-    "bcryptjs": "2.4.3",
+    "bcryptjs": "3.0.3",
     "mongoose": "6.12.0",
     "pg": "8.11.0",
     "cors": "2.8.5",
