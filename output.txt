@@ -1,0 +1,8 @@
+[+] up 4/5
+ ✔ Image s... Built                                                       97.5s
+ ✔ Image s... Built                                                       97.5s
+ ✔ Network... Created                                                     0.2s
+ ⠋ Contain... Creating                                                    0.0s
+ ✘ Contain... Error response from daemon: Conflict. The container name "/financial-mongo" is already in use by container "4a67bd603d9eff42a3fc4ab20d7da8788718b1c4eeb59bc42eb26565d3fe547a". You have to remove (or rename) that container to be able to reuse that name. 0.0s
+Error response from daemon: Conflict. The container name "/financial-mongo" is already in use by container "4a67bd603d9eff42a3fc4ab20d7da8788718b1c4eeb59bc42eb26565d3fe547a". You have to remove (or rename) that container to be able to reuse that name.
+socarium@socarium-dvwa:~$

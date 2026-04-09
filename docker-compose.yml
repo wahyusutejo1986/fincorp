@@ -1,0 +1,109 @@
+services:
+  # MongoDB for Users and Wallets
+  mongo:
+    image: mongo:4.4.18  # VULNERABILITY: Outdated MongoDB version
+    container_name: financial-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - financial-network
+    restart: unless-stopped
+    healthcheck:
+      test: echo 'db.adminCommand("ping")' | mongo localhost:27017/financial --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # PostgreSQL for Transactions
+  postgres:
+    image: postgres:12.15  # VULNERABILITY: Outdated PostgreSQL version
+    container_name: financial-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: financial
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - financial-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d financial"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # Backend API
+  backend:
+    build: ./backend
+    container_name: financial-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - MONGODB_URI=mongodb://admin:admin123@mongo:27017/financial?authSource=admin
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=financial
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - JWT_SECRET=super-secret-key-123
+    depends_on:
+      mongo:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - financial-network
+    restart: unless-stopped
+
+  # Seed service for training data
+  seed:
+    build: ./backend
+    container_name: financial-seed
+    environment:
+      - MONGODB_URI=mongodb://admin:admin123@mongo:27017/financial?authSource=admin
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=financial
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    depends_on:
+      mongo:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - financial-network
+    profiles:
+      - seed
+    command: ["node", "seed.js"]
+
+  # Frontend (React)
+  frontend:
+    build: ./frontend
+    container_name: financial-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - financial-network
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
+  postgres_data:
+
+networks:
+  financial-network:
+    driver: bridge
